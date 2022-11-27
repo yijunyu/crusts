@@ -3,7 +3,6 @@ use std::{
     process::{Command, Stdio},
 };
 use walkdir::{DirEntry, WalkDir};
-
 pub fn is_file_with_ext(entry: &DirEntry, file_ext: &str) -> bool {
     if !entry.file_type().is_file() {
         return false;
@@ -13,16 +12,13 @@ pub fn is_file_with_ext(entry: &DirEntry, file_ext: &str) -> bool {
         Some(e) => e,
         None => return false,
     };
-    // to_string_lossy is ok since we only want to match against an ASCII
-    // compatible extension and we do not keep the possibly lossy result
-    // around.
     ext.to_string_lossy() == file_ext
 }
 
 fn find_rs_files_in_dir(dir: &Path) -> impl Iterator<Item = PathBuf> {
     let walker = WalkDir::new(dir).into_iter();
     walker.filter_map(|entry| {
-        let entry = entry.expect("walkdir error."); // TODO: Return result.
+        let entry = entry.expect("walkdir error.");
         if !is_file_with_ext(&entry, "rs") {
             return None;
         }
@@ -31,12 +27,12 @@ fn find_rs_files_in_dir(dir: &Path) -> impl Iterator<Item = PathBuf> {
                 .path()
                 .canonicalize()
                 .expect("Error converting to canonical path"),
-        ) // TODO: Return result.
+        )
     })
 }
 
 fn main() {
-    for path in find_rs_files_in_dir(Path::new("src")) {
+    for path in find_rs_files_in_dir(Path::new(".")) {
         let file = &format!("{}", &path.into_os_string().to_string_lossy());
         fix_unsafe(file);
     }
@@ -90,14 +86,19 @@ mod tests {
                 .spawn()
                 .ok();
             let code = r#"
-fn main() {
-    let s = std::fs::read_to_string("Cargo.toml").unwrap();
-    println!("{s}");
+unsafe fn main() {
+    println!("Hello, world!");
 }
 "#;
-            std::fs::write("test/src/main.rs", code).ok();
+            std::fs::write("abc/src/main.rs", code).ok();
         }
         std::env::set_current_dir(dir).ok();
         main();
+        let s = std::fs::read_to_string("src/main.rs").unwrap();
+        insta :: assert_snapshot! (s, @ r###"
+        fn main() {
+            println!("Hello, world!");
+        }
+        "###);
     }
 }
