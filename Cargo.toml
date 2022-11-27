@@ -1,0 +1,18 @@
+[package]
+name = "crusts"
+version = "0.1.0"
+edition = "2021"
+authors = [
+    "Yijun Yu <y.yu@open.ac.uk>",
+]
+description = "CRustS - to safer Rust"
+repository = "https://github.com/yijunyu/crusts"
+documentation = "https://docs.rs/crusts"
+keywords = ["crusts", "refactoring"]
+license = "Apache-2.0"
+
+[dependencies]
+txl-rs = "0.0.3"
+reqwest = { version = "0.11.13", features = ["blocking"] }
+walkdir = "2.3.2"
+
