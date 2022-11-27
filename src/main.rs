@@ -1,13 +1,9 @@
 use std::{
-    path::{Path, PathBuf},
-    process::{Command, Stdio},
+    process::{Command, Stdio}, path::Path,
 };
-use walkdir::{DirEntry, WalkDir};
-pub fn is_file_with_ext(entry: &DirEntry, file_ext: &str) -> bool {
-    if !entry.file_type().is_file() {
-        return false;
-    }
-    let p = entry.path();
+use jwalk::WalkDir;
+
+pub fn is_file_with_ext(p: &Path, file_ext: &str) -> bool {
     let ext = match p.extension() {
         Some(e) => e,
         None => return false,
@@ -15,27 +11,17 @@ pub fn is_file_with_ext(entry: &DirEntry, file_ext: &str) -> bool {
     ext.to_string_lossy() == file_ext
 }
 
-fn find_rs_files_in_dir(dir: &Path) -> impl Iterator<Item = PathBuf> {
-    let walker = WalkDir::new(dir).into_iter();
-    walker.filter_map(|entry| {
-        let entry = entry.expect("walkdir error.");
-        if !is_file_with_ext(&entry, "rs") {
-            return None;
-        }
-        Some(
-            entry
-                .path()
-                .canonicalize()
-                .expect("Error converting to canonical path"),
-        )
-    })
-}
-
 fn main() {
-    for path in find_rs_files_in_dir(Path::new(".")) {
-        let file = &format!("{}", &path.into_os_string().to_string_lossy());
-        fix_unsafe(file);
-    }
+    WalkDir::new(".").sort(true).into_iter().for_each(|entry| {
+        if let Ok(e) = entry {
+            let p = e.path();
+            if !is_file_with_ext(&p, "rs") {
+                return; 
+            }
+            let file = &format!("{}", &p.into_os_string().to_string_lossy());
+            fix_unsafe(file);
+        }
+    });
 }
 
 extern crate reqwest;
@@ -94,11 +80,12 @@ unsafe fn main() {
         }
         std::env::set_current_dir(dir).ok();
         main();
-        let s = std::fs::read_to_string("src/main.rs").unwrap();
-        insta :: assert_snapshot! (s, @ r###"
-        fn main() {
-            println!("Hello, world!");
+        if let Ok(s) = std::fs::read_to_string("src/main.rs") {
+            insta :: assert_snapshot! (s, @ r###"
+            fn main() {
+                println!("Hello, world!");
+            }
+            "###);
         }
-        "###);
     }
 }
