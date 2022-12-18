@@ -2,7 +2,11 @@ use jwalk::WalkDir;
 use std::{
     path::Path,
     process::{Command, Stdio},
+//    io::Write,
 };
+use flate2::read::GzDecoder;
+use tar::Archive;
+use uuid::Uuid;
 pub fn is_file_with_ext(p: &Path, file_ext: &str) -> bool {
     let ext = match p.extension() {
         Some(e) => e,
@@ -12,7 +16,6 @@ pub fn is_file_with_ext(p: &Path, file_ext: &str) -> bool {
 }
 
 fn main() {
-    println!("Generating compile_commands.json from Makefile ...");
     if !std::path::Path::new("compile_commands.json").exists()
         & &(std::path::Path::new("Makefile").exists() || std::path::Path::new("Makefile").exists())
     {
@@ -23,15 +26,9 @@ fn main() {
         {
             if let Ok(output) = command.wait_with_output() {
                 println!("{:?}", output);
-            } else {
-                let _ = Command::new("pip")
-                    .args(["install", "scan-build"])
-                    .spawn();
-                println!("Please add ~/.local/bin to your PATH, and start again.");
             }
         }
     }
-    println!("Apply C2Rust transpilation ...");
     match Command::new("c2rust-transpile")
         .args(["-e", "-b", "main", "-o", "c2rust", "compile_commands.json"])
         .stdout(Stdio::piped())
@@ -44,13 +41,12 @@ fn main() {
         }
         Err(_) => {
             Command::new("cargo")
-                .args(["install", "c2rust"])
+                .args(["install", "c2rust-transpile"])
                 .stdout(Stdio::piped())
                 .spawn()
                 .ok();
         }
     }
-    println!("Apply C2Rust transpilation again ...");
     match Command::new("c2rust-transpile")
         .args(["-e", "-b", "main", "-o", "crusts", "compile_commands.json"])
         .stdout(Stdio::piped())
@@ -69,7 +65,6 @@ fn main() {
                 .ok();
         }
     }
-    println!("Apply TXL transformations to reduce unsafe code ...");
     WalkDir::new("./crusts").sort(true).into_iter().for_each(|entry| {
         if let Ok(e) = entry {
             let p = e.path();
@@ -77,44 +72,70 @@ fn main() {
                 return;
             }
             let file = &format!("{}", &p.into_os_string().to_string_lossy());
-            fix_unsafe(file);
+            crusts(file);
         }
     });
 }
 
 extern crate reqwest;
 
-const URL: &str = "http://bertrust.s3.amazonaws.com/unsafe.txl";
-fn fix_unsafe(file: &str) {
-    if !std::path::Path::new("crusts.tar.gz").exists() {
+#[cfg(target_os = "macos")]
+const FOLDER: &str = "txl10.8b.macosx64";
+#[cfg(target_os = "linux")]
+const FOLDER: &str = "txl10.8b.linux64";
+#[cfg(target_os = "windows")]
+const FOLDER: &str = "Txl108bwin64";
+
+const URL: &str = "http://bertrust.s3.amazonaws.com/crusts.tar.gz";
+fn crusts(file: &str) {
+    if !std::path::Path::new(&format!("{}/lib/Rust/unsafe.txl", FOLDER)).exists() {
         if let Ok(resp) = reqwest::blocking::get(URL) {
             if let Ok(bytes) = resp.bytes() {
-                std::fs::write("unsafe.txl", bytes).ok();
+               let tar = GzDecoder::new(&bytes[..]);
+               let mut archive = Archive::new(tar);
+               archive.unpack(format!("{}/lib", FOLDER)).ok();
             }
         }
     }
-    let args = vec![
-        "-q".to_string(),
-        "-s".to_string(),
-        "3000".to_string(),
-        file.to_string(),
-        "unsafe.txl".to_string(),
-    ];
-    if let Ok(output) = txl_rs::txl(args) {
-        std::fs::write(file, output).ok();
-        if let Ok(command) = Command::new("rustfmt")
-            .args([file])
-            .stdout(Stdio::piped())
-            .spawn()
-        {
-            if let Ok(_output) = command.wait_with_output() {
-                if let Ok(s) = std::fs::read_to_string(file) {
-                    println!("{file}");
-                    std::fs::write(file, s).ok();
+    let rules = vec!["formalizeCode.txl",
+        "varTypeNoBounds.txl",
+        "null.txl",
+        "array.txl",
+        "fn.txl",
+        "errnoLocation.txl",
+        "atoi.txl",
+        "time.txl",
+        "const2mut.txl",
+        "main.txl",
+        "stdio.txl",
+        "unsafe.tx",
+       ];
+    std::env::set_var("txl_rules", format!("{}/lib/Rust", FOLDER));
+    let uuid = format!("{:?}.rs", Uuid::new_v4());
+    for r in rules {
+        let args = vec![
+            "-q".to_string(),
+            "-s".to_string(),
+            "3000".to_string(),
+            file.to_string(),
+            format!("{}/lib/Rust/{}", FOLDER, r.to_string()),
+        ];
+        if let Ok(output) = txl_rs::txl(args) {
+            std::fs::write(&uuid, output).ok();
+            if let Ok(command) = Command::new("rustfmt")
+                .args([&uuid])
+                .stdout(Stdio::piped())
+                .spawn()
+            {
+                if let Ok(_output) = command.wait_with_output() {
+                    if let Ok(s) = std::fs::read_to_string(file) {
+                        std::fs::write(file, s).ok();
+                    }
                 }
             }
         }
     }
+    std::fs::remove_file(uuid).ok();
 }
 
 #[cfg(test)]
@@ -138,7 +159,7 @@ int main() {
 "#,
         )
         .ok();
-        std::fs::write("abc/Makefile", "main: main.c\n\tgcc -o main main.c\n").ok();
+        std::fs::write("abc/Makefile", "main: main.c\n\tgcc -o main main.c\n\nclean::\n\trm -rf main c2rust crusts compile_commands.json txl10.8b.linux64").ok();
         std::env::set_current_dir(dir).ok();
         main();
         if let Ok(s) = std::fs::read_to_string("c2rust/src/main.rs") {
@@ -161,28 +182,19 @@ int main() {
         }
         if let Ok(s) = std::fs::read_to_string("crusts/src/main.rs") {
             insta :: assert_snapshot! (s, @ r###"
-            #![allow(
-                dead_code,
-                mutable_transmutes,
-                non_camel_case_types,
-                non_snake_case,
-                non_upper_case_globals,
-                unused_assignments,
-                unused_mut
-            )]
+            #![allow(dead_code, mutable_transmutes, non_camel_case_types, non_snake_case, non_upper_case_globals, unused_assignments, unused_mut)]
             #![register_tool(c2rust)]
             #![feature(register_tool)]
-            use crusts::*;
+            use ::crusts::*;
             extern "C" {
                 fn printf(_: *const libc::c_char, _: ...) -> libc::c_int;
             }
-            fn main_0() -> libc::c_int {
+            unsafe fn main_0() -> libc::c_int {
                 printf(b"Hello, world!\0" as *const u8 as *const libc::c_char);
                 return 0 as libc::c_int;
             }
-
             pub fn main() {
-                ::std::process::exit(main_0() as i32);
+                unsafe { ::std::process::exit(main_0() as i32) }
             }
             "###);
         }

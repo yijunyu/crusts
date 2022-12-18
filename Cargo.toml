@@ -3,7 +3,12 @@ name = "crusts"
 version = "0.0.1"
 edition = "2021"
 authors = [
+    "Michael Ling <michael.ling@huawei.com>",
     "Yijun Yu <y.yu@open.ac.uk>",
+    "Haitao Wu <haitao.wu@huawei.com>",
+    "Yuan Wang <yuan.wang@huawei.com>",
+    "James R. Cordy <cordy@cs.queensu.ca>",
+    "Ahmed E. Hassan <hassan@queensu.ca>",
 ]
 description = "CRustS - to safer Rust"
 repository = "https://github.com/yijunyu/crusts"
@@ -12,9 +17,14 @@ keywords = ["crusts", "refactoring"]
 license = "Apache-2.0"
 
 [dependencies]
+# c2rust-transpile = "0.16.0"
 txl-rs = "0.0.3"
 reqwest = { version = "0.11.13", features = ["blocking"] }
 jwalk = "0.5"
+flate2 = "1.0.24"
+tar = "0.4.28"
+zip = "0.6.3"
+uuid = { version = "1.2.2", features = ["v4", "fast-rng", "macro-diagnostics"] }
 
 [dev-dependencies]
 insta = "1.21.1"
