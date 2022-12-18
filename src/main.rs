@@ -12,6 +12,7 @@ pub fn is_file_with_ext(p: &Path, file_ext: &str) -> bool {
 }
 
 fn main() {
+    println!("Generating compile_commands.json from Makefile ...");
     if !std::path::Path::new("compile_commands.json").exists()
         & &(std::path::Path::new("Makefile").exists() || std::path::Path::new("Makefile").exists())
     {
@@ -25,6 +26,7 @@ fn main() {
             }
         }
     }
+    println!("Apply C2Rust transpilation ...");
     match Command::new("c2rust-transpile")
         .args(["-e", "-b", "main", "-o", "c2rust", "compile_commands.json"])
         .stdout(Stdio::piped())
@@ -37,12 +39,13 @@ fn main() {
         }
         Err(_) => {
             Command::new("cargo")
-                .args(["install", "c2rust-transpile"])
+                .args(["install", "c2rust"])
                 .stdout(Stdio::piped())
                 .spawn()
                 .ok();
         }
     }
+    println!("Apply C2Rust transpilation again ...");
     match Command::new("c2rust-transpile")
         .args(["-e", "-b", "main", "-o", "crusts", "compile_commands.json"])
         .stdout(Stdio::piped())
@@ -61,6 +64,7 @@ fn main() {
                 .ok();
         }
     }
+    println!("Apply TXL transformations to reduce unsafe code ...");
     WalkDir::new("./crusts").sort(true).into_iter().for_each(|entry| {
         if let Ok(e) = entry {
             let p = e.path();
