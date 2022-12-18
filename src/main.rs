@@ -23,6 +23,11 @@ fn main() {
         {
             if let Ok(output) = command.wait_with_output() {
                 println!("{:?}", output);
+            } else {
+                let _ = Command::new("pip")
+                    .args(["install", "scan-build"])
+                    .spawn();
+                println!("Please add ~/.local/bin to your PATH, and start again.");
             }
         }
     }
