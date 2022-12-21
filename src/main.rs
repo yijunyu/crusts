@@ -2,7 +2,6 @@ use jwalk::WalkDir;
 use std::{
     path::Path,
     process::{Command, Stdio},
-//    io::Write,
 };
 use flate2::read::GzDecoder;
 use tar::Archive;
