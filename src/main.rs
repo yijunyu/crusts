@@ -122,7 +122,6 @@ extern crate reqwest;
 
 #[cfg(target_os = "macos")]
 const FOLDER: &str = "txl10.8b.macosx64";
-<<<<<<< HEAD
 #[cfg(target_os = "macos")]
 const URL: &str = "http://bertrust.s3.amazonaws.com/crusts-macosx.tar.gz";
 #[cfg(target_os = "linux")]
