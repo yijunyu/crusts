@@ -154,7 +154,7 @@ fn crusts() {
         "time.x",
         "const2mut.x",
         // "main.x",
-        // "stdio.x",
+        "stdio.x",
         "unsafe.x",
     ];
     std::env::set_var("PATH", format!("{}/lib/Rust:{:?}", FOLDER, std::env::var("PATH")));
@@ -276,37 +276,35 @@ int main() {
         main();
         if let Ok(s) = std::fs::read_to_string("src/main.rs") {
             insta :: assert_snapshot! (s, @ r###"
-                        #![allow(
-                            dead_code,
-                            mutable_transmutes,
-                            non_camel_case_types,
-                            non_snake_case,
-                            non_upper_case_globals,
-                            unused_assignments,
-                            unused_mut
-                        )]
-                        use c2rust_out::*;
-                        extern "C" {
-                            fn printf(_: *const i8, _: ...) -> i32;
-                        }
-                        fn main_0() -> i32 {
-                            unsafe {
-                                printf(b"Hello, world!\0" as *const u8 as *const i8);
-                            }
-                            return 0;
-                        }
+            #![allow(
+                dead_code,
+                mutable_transmutes,
+                non_camel_case_types,
+                non_snake_case,
+                non_upper_case_globals,
+                unused_assignments,
+                unused_mut
+            )]
+            #![register_tool(c2rust)]
+            #![feature(register_tool)]
+            use c2rust_out::*;
+            extern "C" {}
+            fn main_0() -> i32 {
+                print!("Hello, world!");
+                return 0;
+            }
 
-                        pub fn main() {
-                            ::std::process::exit(main_0() as i32);
-                        }
-                        "###);
+            pub fn main() {
+                ::std::process::exit(main_0() as i32);
+            }
+            "###);
         }
         std::env::set_current_dir(std::env::current_dir().unwrap().parent().unwrap()).ok();
     }
 
     #[test]
     fn test_main() {
+        // test_unsafe();
         test_crusts();
-        test_unsafe();
     }
 }
