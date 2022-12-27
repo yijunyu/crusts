@@ -194,8 +194,67 @@ fn crusts() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test]
-    fn test_main() {
+
+    fn test_unsafe() {
+        let dir = std::path::Path::new("abc");
+        if dir.exists() {
+            std::fs::remove_dir_all(dir).ok();
+        }
+        std::fs::create_dir_all(dir).ok();
+        std::fs::write(
+            "abc/main.rs",
+            r#"
+use libc;
+extern "C" {
+    fn realloc(_: *mut libc::c_void, _: u64) -> *mut libc::c_void;
+}
+#[no_mangle]
+pub unsafe extern "C" fn add_value(mut p: *mut tvm_program_t, val: i32) -> *mut i32 {
+        (*p).values = realloc(
+            (*p).values as *mut libc::c_void,
+            (::core::mem::size_of::<*mut i32>() as u64)
+                .wrapping_mul(((*p).num_values + 1i32) as u64),
+        ) as *mut *mut i32;
+        let ref mut fresh7 = *((*p).values).offset((*p).num_values as isize);
+        *fresh7 = calloc(1, ::core::mem::size_of::<i32>() as u64) as *mut i32;
+        **((*p).values).offset((*p).num_values as isize) = val;
+        let fresh8 = (*p).num_values;
+        (*p).num_values = (*p).num_values + 1;
+        return *((*p).values).offset(fresh8 as isize);
+}
+"#,
+        )
+        .ok();
+        std::env::set_current_dir(dir).ok();
+        crusts();
+        std::env::set_current_dir(std::env::current_dir().unwrap().parent().unwrap()).ok();
+        if let Ok(s) = std::fs::read_to_string("abc/main.rs") {
+            insta :: assert_snapshot! (s, @ r###"
+            use libc;
+            extern "C" {
+                fn realloc(_: *mut libc::c_void, _: u64) -> *mut libc::c_void;
+            }
+            #[no_mangle]
+            pub extern "C" fn add_value(mut p: *mut tvm_program_t, val: i32) -> *mut i32 {
+                unsafe {
+                    (*p).values = realloc(
+                        (*p).values as *mut libc::c_void,
+                        (::core::mem::size_of::<*mut i32>() as u64)
+                            .wrapping_mul(((*p).num_values + 1i32) as u64),
+                    ) as *mut *mut i32;
+                    let ref mut fresh7 = *((*p).values).offset((*p).num_values as isize);
+                    *fresh7 = calloc(1, ::core::mem::size_of::<i32>() as u64) as *mut i32;
+                    **((*p).values).offset((*p).num_values as isize) = val;
+                    let fresh8 = (*p).num_values;
+                    (*p).num_values = (*p).num_values + 1;
+                    return *((*p).values).offset(fresh8 as isize);
+                }
+            }
+            "###);
+        }
+    }
+
+    fn test_crusts() {
         let dir = std::path::Path::new("abc");
         if dir.exists() {
             std::fs::remove_dir_all(dir).ok();
@@ -217,30 +276,37 @@ int main() {
         main();
         if let Ok(s) = std::fs::read_to_string("src/main.rs") {
             insta :: assert_snapshot! (s, @ r###"
-            #![allow(
-                dead_code,
-                mutable_transmutes,
-                non_camel_case_types,
-                non_snake_case,
-                non_upper_case_globals,
-                unused_assignments,
-                unused_mut
-            )]
-            use c2rust_out::*;
-            extern "C" {
-                fn printf(_: *const i8, _: ...) -> i32;
-            }
-            fn main_0() -> i32 {
-                unsafe {
-                    printf(b"Hello, world!\0" as *const u8 as *const i8);
-                }
-                return 0;
-            }
+                        #![allow(
+                            dead_code,
+                            mutable_transmutes,
+                            non_camel_case_types,
+                            non_snake_case,
+                            non_upper_case_globals,
+                            unused_assignments,
+                            unused_mut
+                        )]
+                        use c2rust_out::*;
+                        extern "C" {
+                            fn printf(_: *const i8, _: ...) -> i32;
+                        }
+                        fn main_0() -> i32 {
+                            unsafe {
+                                printf(b"Hello, world!\0" as *const u8 as *const i8);
+                            }
+                            return 0;
+                        }
 
-            pub fn main() {
-                ::std::process::exit(main_0() as i32);
-            }
-            "###);
+                        pub fn main() {
+                            ::std::process::exit(main_0() as i32);
+                        }
+                        "###);
         }
+        std::env::set_current_dir(std::env::current_dir().unwrap().parent().unwrap()).ok();
+    }
+
+    #[test]
+    fn test_main() {
+        test_crusts();
+        test_unsafe();
     }
 }
