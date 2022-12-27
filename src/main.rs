@@ -38,7 +38,7 @@ fn main() {
                     obj.push_str(" \\\n");
                     obj.push_str(&c_file.replace(".c", ".o"));
                 }
-                std::fs::write("Makefile", format!("main: {}\n\tgcc -o main {}\n\n.c.o: \n\tgcc -c $<\n\n.cpp.o: \n\tg++ -c $<\n\nclean::\n\trm -rf Makefile main c2rust crusts compile_commands.json txl10.8b.linux64 Cargo.lock target", obj, obj)).ok();
+                std::fs::write("Makefile", format!("main: {}\n\tgcc -o main {}\n\n.c.o: \n\tgcc -c $<\n\n.cpp.o: \n\tg++ -c $<\n\nclean::\n\trm -rf Makefile main c2rust crusts compile_commands.json txl10.8b.linux64 txl10.8b.macosx64 Cargo.lock target", obj, obj)).ok();
             }
             if !std::path::Path::new("Makefile").exists()
                 && !std::path::Path::new("configure").exists()
@@ -64,8 +64,9 @@ fn main() {
                 }
             }
             if std::path::Path::new("Makefile").exists() {
-                if let Ok(command) = Command::new("intercept-build")
-                    .args(["make", "-k"])
+
+                if let Ok(command) = Command::new(BEAR)
+                    .args(BEAR_ARGS)
                     .stdout(Stdio::piped())
                     .spawn()
                 {
@@ -103,14 +104,26 @@ extern crate reqwest;
 const FOLDER: &str = "txl10.8b.macosx64";
 #[cfg(target_os = "macos")]
 const URL: &str = "http://bertrust.s3.amazonaws.com/crusts-macosx.tar.gz";
+#[cfg(target_os = "macos")]
+const BEAR: &str = "bear";
+#[cfg(target_os = "macos")]
+const BEAR_ARGS: [&str; 2] = ["--", "make"];
 #[cfg(target_os = "linux")]
 const FOLDER: &str = "txl10.8b.linux64";
 #[cfg(target_os = "linux")]
 const URL: &str = "http://bertrust.s3.amazonaws.com/crusts-linux.tar.gz";
+#[cfg(target_os = "linux")]
+const BEAR: &str = "bear";
+#[cfg(target_os = "linux")]
+const BEAR_ARGS: [&str; 1] = ["make"];
 #[cfg(target_os = "windows")]
 const FOLDER: &str = "Txl108bwin64";
 #[cfg(target_os = "windows")]
 const URL: &str = "http://bertrust.s3.amazonaws.com/crusts-windows.tar.gz";
+#[cfg(target_os = "windows")]
+const BEAR: &str = "intercept-build";
+#[cfg(target_os = "windows")]
+const BEAR_ARGS: [&str; 1] = ["make"];
 
 fn crusts() {
     if !std::path::Path::new(&format!("{}/lib/Rust/unsafe.x", FOLDER)).exists() {
@@ -199,7 +212,7 @@ int main() {
 "#,
         )
         .ok();
-        std::fs::write("abc/Makefile", "main: main.c\n\tgcc -o main main.c\n\nclean::\n\trm -rf main compile_commands.json src Cargo.toml *.rs rust-toolchain txl10.8b.linux64").ok();
+        std::fs::write("abc/Makefile", "main: main.c\n\tgcc -o main main.c\n\nclean::\n\trm -rf main compile_commands.json src Cargo.toml *.rs rust-toolchain rust-toolchain.toml txl10.8b.linux64 txl10.8b.macosx64 Cargo.lock target").ok();
         std::env::set_current_dir(dir).ok();
         main();
         if let Ok(s) = std::fs::read_to_string("src/main.rs") {
@@ -213,8 +226,6 @@ int main() {
                 unused_assignments,
                 unused_mut
             )]
-            #![register_tool(c2rust)]
-            #![feature(register_tool)]
             use c2rust_out::*;
             extern "C" {
                 fn printf(_: *const i8, _: ...) -> i32;
