@@ -158,7 +158,6 @@ fn crusts() {
         "unsafe.x",
     ];
     std::env::set_var("PATH", format!("{}/lib/Rust:{:?}", FOLDER, std::env::var("PATH")));
-    std::env::set_var("txl_rules", format!("{}/lib/Rust", FOLDER));
     for r in rules {
         println!("applying {r}...");
         WalkDir::new(".").sort(true).into_iter().for_each(|entry| {
@@ -173,6 +172,8 @@ fn crusts() {
                     file.to_string(),
                     "-o".to_string(),
                     file.to_string(),
+                    "-".to_string(),
+                    format!("{}/lib/Rust", FOLDER)
                 ];
                 if let Ok(txl_command) = Command::new(format!("{}/lib/Rust/{}", FOLDER, r.to_string())).args(args).spawn() {
                     if let Ok(_output) = txl_command.wait_with_output() {
@@ -265,7 +266,7 @@ pub unsafe extern "C" fn add_value(mut p: *mut tvm_program_t, val: i32) -> *mut 
             r#"
 #include <stdio.h>
 int main() {
-    printf("Hello, world!");
+    printf("Hello, world!\n");
     return 0;
 }
 "#,
@@ -285,12 +286,10 @@ int main() {
                 unused_assignments,
                 unused_mut
             )]
-            #![register_tool(c2rust)]
-            #![feature(register_tool)]
             use c2rust_out::*;
             extern "C" {}
             fn main_0() -> i32 {
-                print!("Hello, world!");
+                print!("Hello, world!\n");
                 return 0;
             }
 
