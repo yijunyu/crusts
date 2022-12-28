@@ -1,9 +1,0 @@
-*.o
-tinyvm
-tinyvm-debug
-profile
-valgrind*
-cachegrind*
-callgrind*
-core*
-
