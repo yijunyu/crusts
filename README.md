@@ -15,12 +15,12 @@ if [ $(uname -s) == "Darwin" ]; then
    cp target/release/c2rust-instrument $HOME/.cargo/bin
    brew install bear
    export PATH=$HOME/.local/bin:$HOME/.cargo/bin:$PATH
-   cargo install --path .
+   cargo install crusts
 elif [ $(uname -s) == "Linux" ]; then
    cargo install c2rust
    apt-get install bear
    export PATH=$HOME/.local/bin:$HOME/.cargo/bin:$PATH
-   cargo install --path .
+   cargo install crusts
 else
    docker pull yijun/crusts
 fi
