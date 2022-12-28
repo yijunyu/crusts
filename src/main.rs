@@ -152,7 +152,10 @@ const BEAR: &str = "intercept-build";
 const BEAR_ARGS: [&str; 1] = ["make"];
 
 fn crusts() {
-    let p = format!("{}/bin", std::env::var("CARGO_HOME").unwrap());
+    let mut p = format!("{}/.cargo/bin", std::env::var("HOME").unwrap());
+    if let Ok(home) = std::env::var("CARGO_HOME") {
+      p = format!("{}/bin", home);
+    }
     if !std::path::Path::new(&format!("{}/Rust/unsafe.x", p)).exists() {
         println!("downloading txl rules ... ");
         if let Ok(resp) = reqwest::blocking::get(URL) {
