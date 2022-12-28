@@ -20,10 +20,10 @@ license = "Apache-2.0"
 # c2rust-transpile = "0.16.0"
 # txl-rs = "0.0.3"
 reqwest = { version = "0.11.13", features = ["blocking"] }
-jwalk = "0.5"
-flate2 = "1.0.24"
-tar = "0.4.28"
+jwalk = "0.8"
+flate2 = "1.0.25"
+tar = "0.4.38"
 # zip = "0.6.3"
 
 [dev-dependencies]
-insta = "1.21.1"
+insta = "1.23.0"
