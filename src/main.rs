@@ -158,7 +158,7 @@ fn crusts() {
         "stdio.x",
         "unsafe.x",
     ];
-    std::env::set_var("PATH", format!("{}/lib/Rust:{:?}", FOLDER, std::env::var("PATH")));
+    std::env::set_var("PATH", format!("{}/lib/Rust:{:?}:/usr/local/cargo/bin", FOLDER, std::env::var("PATH")));
     for r in rules {
         println!("applying {r}...");
         WalkDir::new(".").sort(true).into_iter().for_each(|entry| {
