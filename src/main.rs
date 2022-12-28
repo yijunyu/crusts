@@ -158,7 +158,7 @@ fn crusts() {
         "stdio.x",
         "unsafe.x",
     ];
-    std::env::set_var("PATH", format!("{}/lib/Rust:{:?}:/usr/local/cargo/bin", FOLDER, std::env::var("PATH")));
+    std::env::set_var("PATH", format!("{}/lib/Rust:/usr/local/cargo/bin:{:?}", FOLDER, std::env::var("PATH")));
     for r in rules {
         println!("applying {r}...");
         WalkDir::new(".").sort(true).into_iter().for_each(|entry| {
@@ -168,7 +168,7 @@ fn crusts() {
                     return;
                 }
                 let file = &format!("{}", &p.into_os_string().to_string_lossy());
-                let _txl_command = Command::new(format!("{}/lib/Rust/{}", FOLDER, r.to_string()))
+                let _txl_command = Command::new(r)
                     .args(vec![
                         file.to_string(),
                         "-".to_string(),
