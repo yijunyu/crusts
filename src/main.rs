@@ -64,15 +64,47 @@ fn main() {
                 }
             }
             if std::path::Path::new("Makefile").exists() {
-
-                if let Ok(command) = Command::new(BEAR)
-                    .args(BEAR_ARGS)
+                if let Ok(bear_version) = Command::new(BEAR)
+                    .args(["--version"])
                     .stdout(Stdio::piped())
-                    .spawn()
+                    .spawn() 
                 {
-                    if let Ok(output) = command.wait_with_output() {
-                        println!("{}", String::from_utf8_lossy(&output.stdout));
+                    if let Ok(output) = bear_version.wait_with_output() {
+                        let s = String::from_utf8_lossy(&output.stdout);
+                        if s.contains("bear 2.4.3") {
+                            if let Ok(command) = Command::new(BEAR)
+                                .args(["make"])
+                                .stdout(Stdio::piped())
+                                .spawn()
+                            {
+                                if let Ok(output) = command.wait_with_output() {
+                                    println!("{}", String::from_utf8_lossy(&output.stdout));
+                                } 
+                            }
+                        } else {
+                            if let Ok(command) = Command::new(BEAR)
+                                .args(BEAR_ARGS)
+                                .stdout(Stdio::piped())
+                                .spawn()
+                            {
+                                if let Ok(output) = command.wait_with_output() {
+                                    println!("{}", String::from_utf8_lossy(&output.stdout));
+                                } 
+                            }
+                        }
                     }
+                } else {
+                        if let Ok(command) = Command::new("intercept-build")
+                            .args(["make"])
+                            .stdout(Stdio::piped())
+                            .spawn()
+                        {
+                            if let Ok(output) = command.wait_with_output() {
+                                println!("{}", String::from_utf8_lossy(&output.stdout));
+                            } 
+                        } else {
+                            panic!("Please install bear or scan-build\n");
+                        }
                 }
             }
         }
