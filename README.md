@@ -35,7 +35,7 @@ crusts
 ```
 or 
 ```bash
-docker run -v $(pwd):/mnt -it yijun/crusts
+docker run -v $(pwd):/mnt -t yijun/crusts
 ```
 
 As a result, Rust code will be generated from the C code:
