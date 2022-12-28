@@ -151,7 +151,7 @@ const BEAR: &str = "intercept-build";
 const BEAR_ARGS: [&str; 1] = ["make"];
 fn crusts() {
     let mut home = "/home/ubuntu".to_string();
-    if let Ok(h) = std::env::var("CARGO_HOME") {
+    if let Ok(h) = std::env::var("HOME") {
         home = format!("{}", h);
     }
     let p = format!("{}/.cargo/bin", home);
