@@ -2,4 +2,5 @@
 test*
 Cargo.lock
 bench/*
-!bench/fetch.sh
+!bench/run.sh
+src/txl
