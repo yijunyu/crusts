@@ -38,7 +38,7 @@ fn main() {
                     obj.push_str(" \\\n");
                     obj.push_str(&c_file.replace(".c", ".o"));
                 }
-                std::fs::write("Makefile", format!("main: {}\n\tgcc -o main {}\n\n.c.o: \n\tgcc -c $<\n\n.cpp.o: \n\tg++ -c $<\n\nclean::\n\trm -rf Makefile main c2rust crusts compile_commands.json txl10.8b.linux64 txl10.8b.macosx64 Cargo.lock target", obj, obj)).ok();
+                std::fs::write("Makefile", format!("main: {}\n\tgcc -o main {}\n\n.c.o: \n\tgcc -c $<\n\n.cpp.o: \n\tg++ -c $<\n\nclean::\n\trm -rf Makefile main c2rust crusts compile_commands.json Cargo.lock target", obj, obj)).ok();
             }
             if !std::path::Path::new("Makefile").exists()
                 && !std::path::Path::new("configure").exists()
@@ -133,24 +133,17 @@ fn main() {
 extern crate reqwest;
 
 #[cfg(target_os = "macos")]
-const FOLDER: &str = "txl10.8b.macosx64";
-#[cfg(target_os = "macos")]
 const URL: &str = "http://bertrust.s3.amazonaws.com/crusts-macosx.tar.gz";
 #[cfg(target_os = "macos")]
 const BEAR: &str = "bear";
 #[cfg(target_os = "macos")]
 const BEAR_ARGS: [&str; 2] = ["--", "make"];
 #[cfg(target_os = "linux")]
-const FOLDER: &str = "txl10.8b.linux64";
-// const FOLDER: &str = "/usr/local";
-#[cfg(target_os = "linux")]
 const URL: &str = "http://bertrust.s3.amazonaws.com/crusts-linux.tar.gz";
 #[cfg(target_os = "linux")]
 const BEAR: &str = "bear";
 #[cfg(target_os = "linux")]
 const BEAR_ARGS: [&str; 2] = ["--", "make"];
-#[cfg(target_os = "windows")]
-const FOLDER: &str = "Txl108bwin64";
 #[cfg(target_os = "windows")]
 const URL: &str = "http://bertrust.s3.amazonaws.com/crusts-windows.tar.gz";
 #[cfg(target_os = "windows")]
@@ -159,14 +152,14 @@ const BEAR: &str = "intercept-build";
 const BEAR_ARGS: [&str; 1] = ["make"];
 
 fn crusts() {
-    if !std::path::Path::new(&format!("{}/lib/Rust/unsafe.x", FOLDER)).exists() {
-        println!("downloading txl ... ");
-        std::fs::create_dir(&format!("{}/lib/Rust", FOLDER)).ok();
+    let p = format!("{}/bin", std::env::var("CARGO_HOME").unwrap());
+    if !std::path::Path::new(&format!("{}/Rust/unsafe.x", p)).exists() {
+        println!("downloading txl rules ... ");
         if let Ok(resp) = reqwest::blocking::get(URL) {
             if let Ok(bytes) = resp.bytes() {
                 let tar = GzDecoder::new(&bytes[..]);
                 let mut archive = Archive::new(tar);
-                archive.unpack(format!("{}/lib", FOLDER)).ok();
+                archive.unpack(&p).ok();
             } else {
                 eprintln!("Couldn't download, please check your network connection.");
             }
@@ -190,21 +183,23 @@ fn crusts() {
         "stdio.x",
         "unsafe.x",
     ];
-    std::env::set_var("PATH", format!("{}/lib/Rust:/usr/local/cargo/bin:{:?}", FOLDER, std::env::var("PATH")));
+    let var_path = format!("{}/Rust:{}:{}", &p, &p, std::env::var("PATH").unwrap());
+    // println!("p = {var_path}"); 
+    std::env::set_var("PATH", var_path);
     for r in rules {
         println!("applying {r}...");
         WalkDir::new(".").sort(true).into_iter().for_each(|entry| {
             if let Ok(e) = entry {
-                let p = e.path();
-                if !is_file_with_ext(&p, "rs") {
+                let path = e.path();
+                if !is_file_with_ext(&path, "rs") {
                     return;
                 }
-                let file = &format!("{}", &p.into_os_string().to_string_lossy());
+                let file = &format!("{}", &path.into_os_string().to_string_lossy());
                 let _txl_command = Command::new(r)
                     .args(vec![
                         file.to_string(),
                         "-".to_string(),
-                        format!("{}/lib/Rust", FOLDER)])
+                        format!("{}/Rust", p)])
                     .stdout(Stdio::piped())
                     .spawn()
                     .expect("failed txl command"); 
@@ -300,7 +295,7 @@ int main() {
 "#,
         )
         .ok();
-        std::fs::write("abc/Makefile", "main: main.c\n\tgcc -o main main.c\n\nclean::\n\trm -rf main compile_commands.json src Cargo.toml *.rs rust-toolchain rust-toolchain.toml txl10.8b.linux64 txl10.8b.macosx64 Cargo.lock target").ok();
+        std::fs::write("abc/Makefile", "main: main.c\n\tgcc -o main main.c\n\nclean::\n\trm -rf main compile_commands.json src Cargo.toml *.rs rust-toolchain rust-toolchain.toml Cargo.lock target").ok();
         std::env::set_current_dir(dir).ok();
         main();
         if let Ok(s) = std::fs::read_to_string("src/main.rs") {
