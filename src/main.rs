@@ -110,6 +110,7 @@ const BEAR: &str = "bear";
 const BEAR_ARGS: [&str; 2] = ["--", "make"];
 #[cfg(target_os = "linux")]
 const FOLDER: &str = "txl10.8b.linux64";
+// const FOLDER: &str = "/usr/local";
 #[cfg(target_os = "linux")]
 const URL: &str = "http://bertrust.s3.amazonaws.com/crusts-linux.tar.gz";
 #[cfg(target_os = "linux")]

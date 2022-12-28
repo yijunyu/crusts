@@ -14,7 +14,7 @@ RUN cargo install txl-rs \
  && ./InstallTxl \
  && cd .. \
  && crusts \
- && cp -r txl10.8b.linux64/lib/Rust /usr/local/lib/txl/
+ && cp txl10.8b.linux64/lib/Rust/* /usr/local/lib/txl/
 RUN apt install bear -y
 RUN rustup component add rustfmt
 RUN git clone https://github.com/yijunyu/crusts \
