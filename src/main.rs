@@ -71,7 +71,7 @@ fn main() {
                     .spawn()
                 {
                     if let Ok(output) = command.wait_with_output() {
-                        println!("{:?}", output);
+                        println!("{}", String::from_utf8_lossy(&output.stdout));
                     }
                 }
             }
@@ -83,7 +83,7 @@ fn main() {
         {
             Ok(command) => {
                 if let Ok(output) = command.wait_with_output() {
-                    println!("{:?}", output);
+                    println!("{}", String::from_utf8_lossy(&output.stdout));
                 }
             }
             Err(_) => {
@@ -128,7 +128,7 @@ const BEAR_ARGS: [&str; 1] = ["make"];
 
 fn crusts() {
     if !std::path::Path::new(&format!("{}/lib/Rust/unsafe.x", FOLDER)).exists() {
-        println!("downloading ... ");
+        println!("downloading txl ... ");
         std::fs::create_dir(&format!("{}/lib/Rust", FOLDER)).ok();
         if let Ok(resp) = reqwest::blocking::get(URL) {
             if let Ok(bytes) = resp.bytes() {
@@ -165,29 +165,24 @@ fn crusts() {
             if let Ok(e) = entry {
                 let p = e.path();
                 if !is_file_with_ext(&p, "rs") {
-                    // println!("ignoring {:?}", &p);
                     return;
                 }
                 let file = &format!("{}", &p.into_os_string().to_string_lossy());
-                let args = vec![
-                    file.to_string(),
-                    "-o".to_string(),
-                    file.to_string(),
-                    "-".to_string(),
-                    format!("{}/lib/Rust", FOLDER)
-                ];
-                if let Ok(txl_command) = Command::new(format!("{}/lib/Rust/{}", FOLDER, r.to_string())).args(args).spawn() {
-                    if let Ok(_output) = txl_command.wait_with_output() {
-                        let _ = match Command::new("rustfmt").args([&file]).spawn() {
-                            Ok(mut rustfmt_command) =>  { rustfmt_command.wait().unwrap(); },
-                            Err(e) => { eprintln!("rustfmt {e}: {file} has got a problem!")} ,
-                        };
-                    } else {
-                        eprintln!("txl {r} has got a problem!");
-                    }
-                } else {
-                    eprintln!("{r} has got a problem!");
-                }
+                let _txl_command = Command::new(format!("{}/lib/Rust/{}", FOLDER, r.to_string()))
+                    .args(vec![
+                        file.to_string(),
+                        "-".to_string(),
+                        format!("{}/lib/Rust", FOLDER)])
+                    .stdout(Stdio::piped())
+                    .spawn()
+                    .expect("failed txl command"); 
+                let _rustfmt = Command::new("rustfmt")
+                    .stdin(_txl_command.stdout.unwrap())
+                    .stdout(Stdio::piped())
+                    .spawn()
+                    .expect("failed rustfmt command"); 
+                let output = _rustfmt.wait_with_output().expect("failed to write to stdout");
+                std::fs::write(&file, &output.stdout).expect("can't write to the file");
             }
         });
     }
