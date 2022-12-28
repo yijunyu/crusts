@@ -13,16 +13,26 @@ if [ $(uname -s) == "Darwin" ]; then
    cp target/release/c2rust-transpile $HOME/.cargo/bin
    cp target/release/c2rust-analyze $HOME/.cargo/bin
    cp target/release/c2rust-instrument $HOME/.cargo/bin
+   cd -
    brew install bear
    export PATH=$HOME/.local/bin:$HOME/.cargo/bin:$PATH
+
    cargo install crusts
+
 elif [ $(uname -s) == "Linux" ]; then
-   cargo install c2rust
-   apt-get install bear
+   apt install llvm cmake clang libclang-dev bear -y
+   LLVM_LIB_DIR=/usr/lib/llvm-14/lib/ cargo install c2rust
+   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+   rustup override set nightly-2021-11-22-x86_64-unknown-linux-gnu
+   rustup component add rustfmt --toolchain nightly-2021-11-22-x86_64-unknown-linux-gnu
    export PATH=$HOME/.local/bin:$HOME/.cargo/bin:$PATH
+
    cargo install crusts
+
 else
+
    docker pull yijun/crusts
+
 fi
 ```
 
