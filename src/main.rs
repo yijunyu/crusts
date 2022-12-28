@@ -282,6 +282,8 @@ int main() {
                 unused_assignments,
                 unused_mut
             )]
+            #![register_tool(c2rust)]
+            #![feature(register_tool)]
             use c2rust_out::*;
             extern "C" {}
             fn main_0() -> i32 {
