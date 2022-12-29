@@ -71,7 +71,7 @@ fi
 
 ## Usage:
 
-Run `crusts` in the folder where there is a `Makefile`.
+Run `crusts` in the folder where there is a `Makefile, using
 
 ```bash
 crusts
@@ -83,24 +83,27 @@ docker run -v $(pwd):/mnt -t yijun/crusts
 
 As a result, Rust code will be generated from the C code:
 ```
-src/*.rs -- contains the refactored Rust code from the C code;
-build.rs lib.rs -- contains the builder Rust code;
+src/*.rs -- contains transpiled and refactored Rust code from the C code;
+Cargo.toml build.rs lib.rs -- contains the `cargo build` configurations;
 ```
 
+### Options
+
+* `-v` -- version information
+* `-c2rust` -- only run [c2rust](https://github.com/immunant/c2rust)
+
 ## References
-
 * Michael Ling, Yijun Yu, Haitao Wu, Yuan Wang, James Cordy, Ahmed Hassan. "[In Rust We Trust: A transpiler from Unsafe C to Safer Rust](https://ieeexplore.ieee.org/document/9793767)", In: Proeedings of ICSE, 2022. 
-
-
-* James R. Cordy. TXL. ([site](http://txl.ca))
-
-
 * Mehmet Emre, Ryan Schroeder, Kyle Dewey, and Ben Hardekopf. 2021. [Translating C to safer Rust](https://doi.org/10.1145/3485498). Proc. ACM Program. Lang. 5, OOPSLA, Article 121 (October 2021), 29 pages. ([code](https://zenodo.org/record/5442253#.Y61WJtXP3iB))
+* [TXL](https://github.com/CordyJ/OpenTxl)
+* [C2Rust](https://github.com/immunant/c2rust)
+
 
 ## Update
 
-- [x] [Compared to Laertes with respect to their own benchmarks](https://trusted-programming.github.io/articles/work-in-progress/Tools/CRustS.html)
-- [x] integrate with TXL
-- [x] integrate with docker
-- [ ] bugfix: printf patterns
-- [ ] bugfix: deref pointers
+- [x] [comparing to Laertes](https://trusted-programming.github.io/articles/work-in-progress/Tools/CRustS.html)
+- [x] integrating with docker for Windows users
+- [x] adding a switch `-c2rust` to turn off refactoring
+- [x] adding a switch `-v` to show versioning
+- [ ] bugfix: deref pointers, see `test_unsafe`
+- [ ] bugfix: printf patterns, see `test_stdio`

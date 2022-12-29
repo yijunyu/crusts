@@ -4,3 +4,4 @@ Cargo.lock
 bench/*
 !bench/run.sh
 src/txl
+src/.main.rs.pending-snap

@@ -14,6 +14,19 @@ pub fn is_file_with_ext(p: &Path, file_ext: &str) -> bool {
 }
 
 fn main() {
+    let mut args = std::env::args();
+    let mut versioning = false;
+    let mut stop_refactoring = false;
+    if args.len() == 2 {
+        let arg = args.nth(1).unwrap();
+        versioning = arg == "-v";
+        stop_refactoring = arg == "-c2rust";
+    }
+    if versioning {
+        let version = env!("CARGO_PKG_VERSION");
+        println!("version {version}");
+        return;
+    }
     if !std::path::Path::new("Cargo.toml").exists() {
         if !std::path::Path::new("compile_commands.json").exists() {
             if !std::path::Path::new("Makefile").exists()
@@ -126,7 +139,9 @@ fn main() {
             }
         }
     }
-    crusts();
+    if !stop_refactoring {
+        crusts();
+    }
 }
 
 extern crate reqwest;
