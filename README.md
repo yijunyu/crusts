@@ -99,7 +99,7 @@ build.rs lib.rs -- contains the builder Rust code;
 
 ## Update
 
-- [x] Compared to Laertes [OOPSLA’21] with respect to their own benchmarks
+- [x] [Compared to Laertes with respect to their own benchmarks](https://trusted-programming.github.io/articles/work-in-progress/Tools/CRustS.html)
 - [x] integrate with TXL
 - [x] integrate with docker
 - [ ] bugfix: printf patterns
