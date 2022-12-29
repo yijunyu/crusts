@@ -89,7 +89,8 @@ build.rs lib.rs -- contains the builder Rust code;
 
 ## References
 
-* Michael Ling, Yijun Yu, Haitao Wu, Yuan Wang, James Cordy, Ahmed Hassan. “In Rust We Trust: A transpiler from Unsafe C to Safer Rust”, In: ICSE 2022. 
+* Michael Ling, Yijun Yu, Haitao Wu, Yuan Wang, James Cordy, Ahmed Hassan. "[In Rust We Trust: A transpiler from Unsafe C to Safer Rust](https://ieeexplore.ieee.org/document/9793767)", In: Proeedings of ICSE, 2022. 
+
 
 * James R. Cordy. TXL. ([site](http://txl.ca))
 
