@@ -74,11 +74,11 @@ fi
 Run `crusts` in the folder where there is a `Makefile, using
 
 ```bash
-crusts
+crusts [-v | -c2rust]
 ```
 or 
 ```bash
-docker run -v $(pwd):/mnt -t yijun/crusts
+docker run -v $(pwd):/mnt -t yijun/crusts [-v | -c2rust]
 ```
 
 As a result, Rust code will be generated from the C code:
@@ -90,6 +90,7 @@ Cargo.toml build.rs lib.rs -- contains the `cargo build` configurations;
 ### Options
 
 * `-v` -- version information
+
 * `-c2rust` -- only run [c2rust](https://github.com/immunant/c2rust)
 
 ## References
