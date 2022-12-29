@@ -1,4 +1,37 @@
-# CRustS - Transpiling Unsafe C code to Safe Rust
+# CRustS - Transpiling Unsafe C code to Safer Rust
+
+```
+Michael Ling, Yijun Yu, Haitao Wu, Yuan Wang, James R. Cordy, Ahmed E. Hassan
+Trustworthiness Software Engineering & Open Source Lab
+Huawei Technologies, Inc.
+```
+
+As a safer alternative to C, Rust is a language for programming system software
+with a type-safe compiler to check its memory and concurrency safety. To
+facilitate a smooth transition from C to Rust in an existing project, and lay a
+solid foundation for an initial Rust re-implementation of existing
+functionalities in C, it would be helpful to have a source-to-source transpiler
+that can transform programs from C to Rust using program transformation
+technologies. However, existing C-to-Rust transformation tool sets have the
+drawback that they largely preserve the unsafe semantics of C, while rewriting
+them in Rust syntax. As such, the safety of the resulting Rust programs still
+depends primarily on the programmers, rather than on the Rust compiler. To gain
+more safety guarantees, in this demo, we present CRustS a systematic
+source-to-source transformation approach to increase the ratio of the code
+passing the safety checks of Rust compiler by relaxing the semantics-preserving
+constraints of the transformation. Our method uses 220 [TXL](http://txl.ca)
+source-to-source transformation rules, of which 198 are strictly
+semantics-preserving and 22 are semantics approximating, thus reducing the
+scope of unsafe expressions and exposing more opportunities for safe
+refactoring. Our method has been evaluated on both open-source and commercial
+projects. Our solution demonstrates significantly higher safe code ratios after
+the transformations, with function-level safe code ratios comparable to the
+average level of idiomatic Rust projects.
+
+Compared to the [Laertes](https://doi.org/10.1145/3485498)[OOPSLA’21], with
+respect to their own benchmarks, the safe ratio obtained by CRustS is much
+higher.
+
 
 ## Installation
 
@@ -54,7 +87,19 @@ src/*.rs -- contains the refactored Rust code from the C code;
 build.rs lib.rs -- contains the builder Rust code;
 ```
 
+## References
+
+* Michael Ling, Yijun Yu, Haitao Wu, Yuan Wang, James Cordy, Ahmed Hassan. “In Rust We Trust: A transpiler from Unsafe C to Safer Rust”, In: ICSE 2022. 
+
+* James R. Cordy. TXL. ([site](http://txl.ca))
+
+
+* Mehmet Emre, Ryan Schroeder, Kyle Dewey, and Ben Hardekopf. 2021. [Translating C to safer Rust](https://doi.org/10.1145/3485498). Proc. ACM Program. Lang. 5, OOPSLA, Article 121 (October 2021), 29 pages. ([code](https://zenodo.org/record/5442253#.Y61WJtXP3iB))
+
 ## Update
 
+- [x] Compared to Laertes [OOPSLA’21] with respect to their own benchmarks
 - [x] integrate with TXL
 - [x] integrate with docker
+- [ ] bugfix: printf patterns
+- [ ] bugfix: deref pointers
