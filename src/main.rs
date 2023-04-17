@@ -155,7 +155,7 @@ fn crusts(file: &str) {
         "const2mut.txl",
         "main.txl",
         "stdio.txl",
-        "unsafe.tx",
+        "unsafe.txl",
     ];
     std::env::set_var("txl_rules", format!("{}/lib/Rust", FOLDER));
     let uuid = format!("{:?}.rs", Uuid::new_v4());
